@@ -1,0 +1,83 @@
+From 483c669fccfbac554bdd521d9d39267593f0c8f6 Mon Sep 17 00:00:00 2001
+From: Charles Mirabile <cmirabil@redhat.com>
+Date: Thu, 6 Oct 2022 23:26:55 -0400
+Subject: [PATCH] A4: Add sequence number logging to all driver operations
+
+This patch introduces a global counter whose value will be printed
+and incremented in each operation performed by the driver.
+
+The value will also be used to tag each file when it it opened so
+that otherwise identical operations performed on a file also indicate
+which particular file they refer to.
+
+Signed-off-by: Charles Mirabile <cmirabil@redhat.com>
+---
+ A4/basic_char.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/A4/basic_char.c b/A4/basic_char.c
+index c808b86..32292d0 100644
+--- a/A4/basic_char.c
++++ b/A4/basic_char.c
+@@ -6,6 +6,8 @@
+ 
+ MODULE_LICENSE("GPL");
+ 
++static uintptr_t counter = 0;
++
+ static dev_t basic_char_device_no;
+ static struct cdev *basic_char_cdev;
+ static struct class *basic_char_class;
+@@ -13,26 +15,27 @@ static struct device *basic_char_device;
+ 
+ static int basic_char_open(struct inode *inode, struct file *file)
+ {
+-	printk(KERN_INFO "Basic Char Device: open\n");
++	file->private_data = (void *)counter;
++	printk(KERN_INFO "Basic Char Device %lu: open (number %lu)\n", counter++, (uintptr_t)file->private_data);
+ 	return 0;
+ }
+ 
+ static int basic_char_release(struct inode *inode, struct file *file)
+ {
+ 
+-	printk(KERN_INFO "Basic Char Device: release\n");
++	printk(KERN_INFO "Basic Char Device %lu: release (number %lu)\n", counter++, (uintptr_t)file->private_data);
+ 	return 0;
+ }
+ 
+ static ssize_t basic_char_read(struct file *file, char __user *data, size_t count, loff_t *f_pos)
+ {
+-	printk(KERN_INFO "Basic Char Device: read\n");
++	printk(KERN_INFO "Basic Char Device %lu: read (number %lu)\n", counter++, (uintptr_t)file->private_data);
+ 	return 0;
+ }
+ 
+ static ssize_t basic_char_write(struct file *file, const char __user *data, size_t count, loff_t *f_pos)
+ {
+-	printk(KERN_INFO "Basic Char Device: write\n");
++	printk(KERN_INFO "Basic Char Device %lu: write (number %lu)\n", counter++, (uintptr_t)file->private_data);
+ 	return count;
+ }
+ 
+@@ -54,7 +57,7 @@ static char *basic_char_node(struct device *dev, umode_t *mode)
+ static int basic_char_init(void)
+ {
+ 	int ret;
+-	printk(KERN_INFO "Basic Char Device: init\n");
++	printk(KERN_INFO "Basic Char Device %lu: init\n", counter++);
+ 
+ 	ret = alloc_chrdev_region(&basic_char_device_no, 0, 1, "basic_char");
+ 	if (ret < 0) {
+@@ -106,7 +109,7 @@ fail_region:
+ 
+ static void basic_char_exit(void)
+ {
+-	printk(KERN_INFO "Basic Char Device: exit\n");
++	printk(KERN_INFO "Basic Char Device %lu: exit\n", counter++);
+ 	device_destroy(basic_char_class, basic_char_device_no);
+ 	class_destroy(basic_char_class);
+ 	cdev_del(basic_char_cdev);
+-- 
+2.37.1
+
