@@ -1,0 +1,27 @@
+We will make a driver, called kpet, to simulate an electronic pet in the kernel.
+You can talk to the pet and it will reply. The pet can eat food and do exercise.
+
+The pet is created when we open the file.
+The pet is set free when we close the file.
+
+Here are the expected behaviors of each system call:
+1. open(): initialize a pet, make it alive and stomach full.
+2. close(): just close the file descriptor, free any driver resources.
+
+3. write(): write a string to the pet, this is what you want to say. The pet should recognize at
+least "Hello." and "How are you?".
+
+4. read(): read a string from the driver, this is what the pet wants to say to you.
+By default the pet should not respond "*the pet does not respond*", but if you have
+said something to it that it understands it should respond with hello message or a status message, like
+"Hello." -> "Hello I am a pet in the kernel" or
+"How are you?" -> "I am alive, my stomach is 5/10 full."
+if the message is too large for the provided buffer, it should be truncated to fit.
+
+5. ioctl(): we will implement two commands here: eat and exercise.
+For eat command, the command shall be IOC_EAT (macro with value _IO(0x11, 0))
+ - the food in the pet's stomach will increment by 1.
+For exercise command, the command shall be IOC_EXERCEISE (macro with vaule _IO(0x11, 1))
+ - the food in the pet's stomach will decrement by 1.
+If the pet is too hungry to too full, it is dead.
+It should generate a dead message for read() "*the pet is dead*".

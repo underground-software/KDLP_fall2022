@@ -1,0 +1,56 @@
+Write a character driver implements a simple vigenere cipher
+
+You will write a word or phrase into the character driver consisting of only lowercase letters and spaces.
+When you read from it, you will see a version of the text after a vigenere cipher has been applied.
+
+By default a key of "vigenere" will be used, but through the use of ioctl, different keys can be specified.
+
+In a vigenere cipher each letter is shifted by the amount of the corresponding letter from the key. (a = 0 ... z = 25)
+The key is looped to cover all the input, and the alphabet wraps around at the end(... 24 -> y, 25 -> z, 26 -> a ...).
+
+For example: the input "hello world" with the default cipher key will produce the ciphertext "cmrpb afvgl"
+
+'h' ( 7) + 'v' (21) -> 'c' (7 + 21 = 28; 28 - 26 = 2)
+'e' ( 4) + 'i' ( 8) -> 'm' (4 + 8 = 12)
+'l' (11) + 'g' ( 6) -> 'r' (11 + 6 = 17)
+'l' (11) + 'e' ( 4) -> 'p' (11 + 4 = 15)
+'o' (14) + 'n' (13) -> 'b' (14 + 13 = 27; 27 - 26 = 1)
+' '                 -> ' ' (space is ignored)
+'w' (22) + 'e' ( 4) -> 'a' (22 + 4 = 26; 26 - 26 = 0)
+'o' (14) + 'r' (17) -> 'f' (14 + 17 = 31; 31 - 26 = 5)
+'r' (17) + 'e' ( 4) -> 'v' (17 + 4 = 21)
+key loops
+'l' (11) + 'v' (21) -> 'g' (11 + 21 = 32; 32 - 26 = 6)
+'d' ( 3) + 'i' ( 8) -> 'l' (3 + 8 = 11)
+
+Expected behavior:
+
+Open:
+    - Initialize the cipher with no input text and a cipher key of "vigenere".
+
+Ioctl:
+    - Takes command `IOC_SET_KEY` (macro with value _IOR(0x11, 0, struct vigenere_key))
+    - Takes a pointer to a struct vigenere_key declared as such:
+    
+	struct vigenere_key {
+		const char *data;
+		size_t length;
+	};
+
+    - Sets the cipher key of the cipher to the provided string and length
+    - The provided string should consist of only lowercase letters a-z and no spaces.
+    - If the input contains bad characters an invalid argument error (EINVAL) shall be returned.
+
+Write:
+    - Takes a string and the string length.
+    - Returns the number of characters successfully read in.
+
+Read:
+    - Copies a version of the last input string encrypted with the latest cipher key into the provided buffer
+    - If the full length of the last input string is longer than the provided count, the output should be truncated
+      to fit within the provided buffer.
+    - Returns the number of characters successfully written out.
+
+Close:
+    - Deallocates any allocated driver resources associated with the open file descriptor
+    - closes file.

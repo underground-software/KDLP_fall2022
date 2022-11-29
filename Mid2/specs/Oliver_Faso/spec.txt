@@ -1,0 +1,50 @@
+Write a driver to simulate the experience of ordering food from a drive through.
+
+First you have to pick where you are going to go, then you need to look at the menu and pick what you want. Finally,
+you can place an order and as long as you provide enough money to pay for what you want you get it.
+
+Operation:
+
+Open:
+ - Initialize an instance of the driver. By default the file should be in restaurant selection mode.
+
+Write:
+ - Select a restaurant to order from. Write its name into the driver. If the provided name is not among the supported
+   restaurants, an I/O error (EIO) shall be returned.
+ - Otherwise, the driver shall enter ordering mode and the menu of the selected restaurant should be viewable upon subsequent reads.
+Ioctl:
+ - Order an item or go back to veiwing the list of restarants.
+ - If the command is IOC_RESTAURANTS (macro with value _IO(0x11, 0)
+   - No argument is provided and the driver is returned to restaurant selection mode.
+ - If the command is IOC_ORDER(item_nr) (macro with value _IOWR(0x,11 item_nr, int))
+   - The item specified by the number within the command value shall be ordered,
+   - A pointer to an integer holding the user's money (in cents) shall be passed as an argument
+   - If the amount of money is insufficient, an invalid argument error (EINVAL) shall be returned.
+   - Otherwise the cost of the item in cents shall be subtracted from the integer whose address is passed.
+ - If the command is not one of the above, an invalid argument error (INVALID) shall be returned.
+
+Read:
+ - Read either a list of restaurants or a menu for a specific restaurant.
+ - If in restaurant selection mode, a list of restaurants shall be provided (the driver must supply at least two options).
+   - Each restaurant shall be listed on its own line and the name shall not have any leading or trailing whitespace. e.g.:
+```
+Wendy's
+Taco Bell
+```
+- If in ordering mode, the menu of that restaurant shall be printed.
+ - The menu should start with a line indicating which restaurant the menu is for e.g. "Wendy's menu:"
+ - subsequent lines shall list items on the menu one per line.
+   - First the number of the item shall be listed in parentheses, then the name shall be written in quotes,
+     and finally the price shall be written as two numbers dollars.cents. e.g. (1) "Baconator" 2.99
+ - A full menu might look something like:
+```
+Wendy's menu:
+(1) "Baconator"		2.99
+(2) "Chili"		1.59
+(3) "Vanilla Frosty"	1.59
+```
+ - Each menu must provide at least 3 items.
+
+Close:
+ - Free any resources associated with the open file descriptor.
+ - Close the file.

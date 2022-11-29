@@ -1,0 +1,31 @@
+-caesar_cipher
+The purpose of this driver is to create a caesar cipher.
+A caesar cipher works by encrypting text by shifting the alphabet by a certain amount to translate your plaintext into an encrypted version of the text.
+For instance if your word was "cool" and the shift was 4 the encrypted text would then be "gssp".
+
+-Open
+initalize an instance of the driver. The initial shift shall be 4, and there shall be no input or output yet.
+
+-Write
+This will write your string into the device.
+Only lowercase letters and spaces and the null byte are acceptable. strings containing other
+characters shall be rejected with an I/O error (EIO)
+
+-Read
+This will read the latest cipher text based on the most recent input string and shift amount.
+Each letter should be moved forward in the alphabet by the shift amount. The alphabet wraps back around to A after Z.
+The space and null byte shall be left unchanged.
+If the provided buffer is too small to fit the full cipher text, it shall be truncated to fit with the provided buffer.
+
+-Close
+This will simply close the file and deallocate any driver resources associated with the open file descriptor.
+
+-ioctl
+Ioctl will be used to change the shift amount.
+This will make the encryption and decryption of the plaintext slightly different.
+The command shall be IOC_SET_SHIFT (macro with value _IO(0x11, 0))
+The argument shall be a number between 1 - 26 which will be the new shift amount.
+If the command isn't IOC_SET_SHIFT or the number argument isn't between 1-26,
+an invalid argument error (EINVAL) shall be returned.
+
+

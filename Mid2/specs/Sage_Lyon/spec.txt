@@ -1,0 +1,39 @@
+Overview:
+
+This character driver module will operate as a basic four function calculator for signed 32 bit integers. The user can select their desired
+operation by writing its symbol '+', '-', '*', or '/' into the special device file, and providing the two arguments via calls to ioctl.
+The result of the operation can then be read from the special device file.
+
+Interface:
+
+Open:
+ - This system call will initialize an instance of the calculator device.
+ - The state of the calculator associated with the file descriptor returned before other operations are applied should be
+   as if the last operation performed were addition, and the last two operands were both zero.
+
+Write:
+ - This system call will allow the user to select the operation they with to perform.
+ - The user can select addition by writing '+', subtraction by writing '-',
+   multiplication by writing '*', and division by writing '/'.
+ - Only the first character passed to each call write is significant.
+   Further bytes passed in a given call to write shall be consumed and discarded by the driver.
+ - If the first byte is not among '+', '-', '*', or '/', an I/O error (EIO) shall be returned.
+
+Ioctl:
+ - This system call will allow the user to select the operands they wish to perform the operation upon.
+ - The first (left hand) operand can be set by passing a request of IOC_OP1 (macro with value _IO(0x11, 0))
+   and the desired signed 32 bit integer as the argument.
+ - The second (right hand) operand can be set by passing a request of IOC_OP2 (macro with value _IO(0x11, 1))
+   and the desired signed 32 bit integer as the argument.
+ - If the request is not one of the two constants, an invalid argument error (EINVAL) shall be returned
+
+Read:
+ - This system call will allow the user to view the result of their most recent computation. 
+ - The signed base 10 ascii representation of the sum/difference/product/quotient (depending on most recent operation)
+   between the most recent left and right hand operand shall be written into the output buffer.
+ - If the computation exceeds the limits of a signed 32 bit twos complement number (or is otherwise invalid
+   such as division by zero) the string "invalid" shall be returned instead.
+ - If the provided buffer is too small to hold the full output, it shall be truncated to fit within the provided space.
+
+Close:
+ - Any driver resources associated with the particular instance of the calculator device shall be freed.

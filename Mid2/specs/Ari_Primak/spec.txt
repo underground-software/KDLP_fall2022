@@ -1,0 +1,46 @@
+Write a character driver that rotates letters.
+
+You will write a word or phrase into the character driver. When you read from
+it, the result will rotate the characters.
+
+By default it will rotate by 13 characters, but through the use of ioctl,
+different values can be used.
+The driver should rotate all alphanumeric characters in the following ways:
+* Each digit should be rotated on its own.
+* Each lowercase letter should be rotated within the lowercase letters.
+* Each uppercase letter should be rotated within the uppercase letters.
+Non-letter, non-numeral characters (anything that doesn't match to [A-Za-z0-9]
+should be left in place unmodified.
+
+There should be a max string length of 1024, and strings longer than that
+should be silently truncated.
+
+For example: "Hello World123" rotated by 13 would become "Uryyb Jbeyq456"
+
+
+
+Expected behavior:
+
+Open:
+    - Initialize the cipher with no input text and a rotation value of 13.
+Ioctl:
+    - Takes command IOC_SET_ROT (macro with value of _IO(0x11, 0))
+    - Takes an unsigned long value as argument (ideally within the
+      range [0;25] but numbers greater than 25 are fine.
+    - Sets the rotation value of the cipher to the provided integer.
+
+Write:
+    - Takes a string and the string length.
+    - If the string is longer than 1024 characters, it should be truncated
+      first.
+    - Returns the number of characters successfully read in.
+
+Read:
+    - Copies a version of the last input string rotated by the latest rotation amount into the provided buffer
+    - If the full length of the last input string is longer than the provided count, the output should be truncated
+      to fit within the provided buffer.
+    - Returns the number of characters successfully written out.
+
+Close:
+    - Frees any resources associated with this open file descriptor.
+    - closes file.

@@ -1,0 +1,32 @@
+Overview:
+
+This character device wil allow the easy conversion of hours in the EST timezone to any other timezone within the U.S.
+The user can input the hour they wish to convert using ioctl, and then select the taret timezone by writing its name
+into the special device file. Reading from the file will provide the equivalent time in that time zone.
+
+Interface:
+
+Open:
+ - This system call will initialize an instance of the time zone converter. 
+ - The state of the converter associated with the file descriptor returned before other operations are performed
+   shall be as if the last hour entered were 12 PM and the last time zone selected was EST.
+
+Ioctl:
+ - This system call will allow the user to input the time in the EST time zone they wish to convert.
+ - Times between 1 AM and 12 AM can be selected by passing a request of IOC_SET_HOUR_AM (macro with value _IO(0x11,0))
+   and the desired hour between 1 and 12 as an argument.
+ - Times between 1 PM and 12 PM can be selected by passing a request of IOC_SET_HOUR_PM (macro with value _IO(0x11,1))
+   and the desired hour between 1 and 12 as an argument.
+ - If the request is not one of the above two values or the argument is not within the range 1 through 12 an
+   invalid argument error (EINVAL) shall be returned.
+
+Write:
+ - This system call will allow the user to select the time zone they wish to convert to.
+ - The user can select among EST, CST, MST, PST, AKST, and HST by writing the abbreviation of their desired time zone into the special device file.
+ - If the enterred text is not one of the support abbreviations, an I/O error (EIO) shall be returned.
+
+Read:
+ - This system call will allow the user to view the result of their conversion.
+ - The hour shall be output in standard 12 hour time with the appropriate label of AM or PM
+   written afterwards (e.g. "3 PM", "12 AM")
+ - If the provided buffer is too small to hold the full output, it shall be truncated to fit within the provided space.

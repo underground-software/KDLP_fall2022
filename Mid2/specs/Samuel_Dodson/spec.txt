@@ -1,0 +1,92 @@
+Write a kernel module that is a brainfuck interpreter!!!
+I thought it was funny and now you have to do it!!!
+https://en.wikipedia.org/wiki/Brainfuck
+
++    +
+  [
+-....-
+
+To make your life easier, this specification comes with a self contained,
+state-machine implementation of a brainfuck interpreter. It is defined inside
+of "bf.h". "bf.c" contains a small test program using it (unrelated to the
+kernel module test program).
+
+Here are some details on using the interpreter:
+  * The main datatype is the struct bf.
+
+  * To initialize or reset a struct bf, zero it.
+
+  * To load a program into a struct bf, write the code into bf->program and set
+    program_len to the code length.
+
+  * To step the interpreter, call bf_run and pass it a struct bf pointer.
+
+  * After calling bf_run...
+     * bf->state will be either NEED_INPUT, FINISHED, or TOO_LONG. (see bf.h and bf.c)
+     * bf->output will accumulate what has been printed by the program
+     * bf->output_len will be the length of bf->output
+
+  * Some brainfuck programs take user input. To pass input to the interpreter,
+    copy it onto the end of bf->input and add the length to bf->input_len.
+    * Example:
+      input = "", input_len = 0
+      user inputs "abc"
+      input = "abc", input_len = 3
+      user inputs "xyz"
+      input = "abcxyz", input_len = 6
+
+"bf.h" contains only what is strictly necessary to run a brainfuck program,
+not any data for kernel module state.
+
+Each open file represents one interpreter. So, it should be possible to
+run multiple brainfuck programs concurrently by opening multiple files.
+Interpreter files should also be reusable.
+
+The brainfuck interpreter module can be in two states, either ready to accept
+a brainfuck program to run, or running an inputted program. I'll call these
+states "input" and "running" respectively.
+
+I leave it unspecified when in the module you call bf_run. There are multiple
+valid places where you could call it. Note it is valid to call bf_run on an
+interpreter in any state, as many times as you want.
+
+File ops:
+* open - Create an interpreter and initalize it in its default state (zero all memory)
+
+* read - View output from a program
+  * If in input mode, return an I/O Error (EIO). This operation doesn't make sense,
+    as read is for reading from the program's output and there is none yet.
+
+  * If in running mode, return data from the program's output in the buffer.
+    Read starting from the current output position (adjustable via llseek).
+    Don't return anything past bf->output_len, as this would be an overflow.
+    If the program finished normally, append "<end>" to the returned output.
+    If the program finished INVALID, append "<invalid>" to the returned output.
+
+* write - Provide a program or user input to the interpreter
+  * If in input mode, take in brainfuck code for the interpreter.
+    One write call is a whole program. Calling write again overwrites
+    whatever program was there last. (Including resetin the output and input)
+
+  * If in running mode, take in the string as input for the interpreter.
+    Subsequent calls to write in running mode appends the new input to
+    what was already there.
+
+  * In either mode, do not accept any input that would overflow bf->program or bf->input.
+    Return a no space error (ENOSPC) in this case
+
+* close - Free any driver data associated with that open file
+
+* ioctl - The request must be IOC_SET_MODE (macro with value _IO(0x11, 0), and the argument must be either 0 or 1.
+  * 0 means set the module into input mode, and zero the interpreter
+  * 1 means set the module into running mode.
+  * If an invalid value is provided for request or argument an invalid
+    input error (EINVAL) should be returned
+
+* lseek - move file position within program output
+  * If in input mode, return an invalid input error (EINVAL). This operation
+    doesn't make sense here.
+  * If in running mode, adjust the file position based on the given offset and value of whence.
+    The range of apropriate values depends on the length of the output (including the <end> or
+    <invalid> tag, see description of read). If the new file position would go past the limits
+    of program's output, return an invalid input error (EINVAL) and do not adjust the file position.

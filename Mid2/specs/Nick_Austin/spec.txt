@@ -1,0 +1,38 @@
+text_filter
+the purpose of this device is to filter text.
+when ioctl is called it will set the filter string we will look for in the text.
+text can be written into the device, and read will provide a censored version of
+the text from write with every character in the filter string replaced by the
+character '*'. For example, with the filter word "doug":
+write: "doug went to get dougself a backwood"
+read: "**** went to get ****self a backwood"
+
+open:
+create an instance of the text filter.
+shall intialize filter with no input, and no filter yet.
+
+write:
+shall set the filter input to the provided string
+returns the count of bytes successfully written.
+
+ioctl:
+tells the device which substring to filter out.
+the command shall be IOC_SET_FILTER (macro with value _IOW(0x11, 0, struct filter))
+and the argument shall be a pointer to a filter struct declared as such:
+
+struct filter {
+	const char *data;
+	size_t length;
+};
+
+If the command is not IOC_SET_FILTER an invalid argument error (EINVAL) shall be returned.
+
+read:
+returns version of the latest input censored according to the latest filter
+calling write between read calls with a new input will apply the previous filter to the new text
+calling ioctl between read calls with a new filter will apply the new filter to the previous text
+if the text is longer than the count argument, the data returned should be
+truncated to fit within the user's buffer.
+
+close:
+cleans up any resources associated with the instance of the text filter.

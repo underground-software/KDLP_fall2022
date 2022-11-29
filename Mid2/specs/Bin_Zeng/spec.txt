@@ -1,0 +1,32 @@
+# Write a character driver implements a simple xor cipher
+
+You will write a word or phrase into the character driver. When you read from
+it, the result will have had each byte xored with a one byte cipher key.
+
+By default it will be xored with 0xAA, but through the use of ioctl,
+different values can be used.
+
+For example: "Hello World123" xored with 0xAA would become "\xe2\xcf\xc6\xc6\xc5\x8a\xfd\xc5\xd8\xc6\xce\x9b\x98\x99"
+
+Expected behavior:
+
+Open:
+    - Initialize the cipher with no input text and a cipher key of 0xAA.
+Ioctl:
+    - Takes command IOC_SET_KEY (macro with value _IO(0x11, 0)).
+    - Takes an uint8_t argument.
+    - Sets the cipher key of the cipher to the provided byte.
+
+Write:
+    - Takes a string and the string length.
+    - Returns the number of characters successfully read in.
+
+Read:
+    - Copies a version of the last input string xored with the latest cipher key into the provided buffer.
+    - If the full length of the last input string is longer than the provided count, the output should be truncated
+      to fit within the provided buffer.
+    - Returns the number of characters successfully written out.
+
+Close:
+    - Deallocates any resources associated with this open file descriptor.
+    - closes file.

@@ -1,0 +1,57 @@
+Mid 1 Spec - Substitution Cipher
+
+The purpose of this character driver will be to encode/decode strings of characters using a basic substitution cipher.
+The substitution cipher works by converting a plaintext string to a ciphertext string by substituting the plaintext alphabet
+(abcdefghijklmnopqrstuvwxyz) with a chiphertext alphabet. To make this task a little simpler, the plaintext string should only
+contain lowercase a-z characters and space.
+
+Here is an example of encoding the plaintext message "hello world" 
+using the chiphertext alphabet "zyxwvutsrqponmlkjihgfedcba".
+space characters are left as they are, and the letters are substituted
+according to the character in the ciphertext alphabet at their index.
+
+abcdefghijklmnopqrstuvwxyz (plaintext alphabet)
+zyxwvutsrqponmlkjihgfedcba (ciphertext alphabet)
+
+'h' -> 's'
+'e' -> 'v'
+'l' -> 'o'
+'l' -> 'o'
+'o' -> 'l'
+' ' -> ' '
+'w' -> 'd'
+'o' -> 'l'
+'r' -> 'i'
+'l' -> 'o'
+'d' -> 'w'
+
+the final result is the ciphertext message "svool dliow"
+
+the cyphertext alphabet is not limited to the lowercase letters and may contain any ascii characters
+
+If needed, here is the Wikipedia page for more information about substitution ciphers: https://en.wikipedia.org/wiki/Substitution_cipher
+
+Here are the expected behaviors for the following system calls:
+
+ - open:
+     Initialize any driver data for this file. The input string should be intialized as if it were empty.
+
+ - write:
+     Write will allow the user to input a plaintext string to the character driver.
+     If the string is invalid (contains a character not in a-z or space) return an invalid argument error (EINVAL)
+     otherwise return the number of characters that were succesffully written to the driver.
+     
+ - ioctl:
+     Ioctl will allow the user to change the ciphertext alphabet.
+     The ioctl request parameter must be IOC_SET_KEY (macro with value _IOW(0x11, 0, char[26])),
+     and the argument must be a pointer to a new ciphertext alphabet (26 characters) that will be used.
+     If the arguments are invalid, return an invalid argument error (EINVAL). Otherwise return 0.
+
+ - read:
+     This file operation will return the ciphertext corresponding to the encoding of last plaintext string
+     that was written to the character driver using the last ciphertext alphabet that was ioctl'd into the driver.
+     If the full cipher text would be longer than the count provided, the output should be truncated to at most
+     that many bytes.
+
+ - close:
+     Close the file and free any driver resources associated with the open file.

@@ -1,0 +1,52 @@
+Implement a driver for playing number scrabble.
+
+Number scrabble is a two player game played with the numbers 1 through 9. Players take turn
+selecting from the list of numbers still available and adding them to their collection. The
+first player to collect three numbers whose sum is fifteen wins. If all the numbers 1 through 9
+are taken and no one has a triplet summing to fifteen, the game is a tie.
+
+It turns out that mathematically the structure of this game is isomorphic to tic tac toe - that is to say
+there are 8 triplets of the numbers from 1 through 9 that sum to fifteen (equivalent to the 8 ways you can
+win at tic tac toe, 3 rows, 3 cols, 2 diagonals) and that each numbe you pick can be thought of as selecting
+an equivalent square within the 3x3 tic tac toe board. If you are curious, the exact isomorphism is as follows:
+
+2 7 6
+9 5 1
+4 3 8
+
+i.e. picking 5 is equivalent to placing your marker (X or O) on the center square of the board, etc.
+
+More information can be found on the wikipedia article for the game. https://en.wikipedia.org/wiki/Number_Scrabble
+
+Expected Behavior:
+
+Open:
+ - Initialize a number scrabble game. The state of the game shall be as if the reset ioctl had just been executed.
+
+Read:
+ - Display the current state of the game, and the verdict of the game if there is one.
+ - The output should look similar to this:
+	FREE: 456
+	PLR1: 123
+	PLR2: 789
+   where the numbers not picked yet are listed first (in ascending order), then the numbers player one has picked (in ascending order)
+   then the numbers player two has picked (in ascending order).
+ - If a player has won or the game is tied, an additional line shall be added at the bottom that says one of "Player 1 Wins (...)"
+   "Player 2 Wins (...)", or "Tie Game". Where the "..." within the parenthesis shall be replaced with the winning combination of digits
+   (.e.g "Player 2 Wins (456)")
+Write:
+ - A player selects their next move.
+ - Imediately following a reset, the first player plays first, and then play alternates between players on subsequent valid write calls.
+ - The input shall be a single character (a digit 1 through 9). If more than one character is provided, those after the first are silently discarded.
+ - If the provided single character is not a digit 1 through 9, an I/O error (EIO) shall be returned.
+ - If the digit provided has already been played, or the game is finished (someone has won or the game is tied) an I/O error (EIO) shall be returned.
+
+Ioctl:
+ - Reset the game to its initial condition.
+ - The command shall be IOC_RESET (macro with value _IO(0x11, 0))
+ - If the command is not IOC_RESET, an invalid argument error (EINVAL) shall be returned.
+ - All digits shall be restored to a "free" state, and the next player to play shall be set to player one. Any win/loss/tie status shall be erased.
+
+Close:
+ - Free any resources associated with the open file descriptor.
+ - Close the file.
